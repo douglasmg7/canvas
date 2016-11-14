@@ -1,3 +1,4 @@
+/* globals Bezier */
 /* eslint no-unused-vars: 0, no-console: 0 */
 'use strict';
 
@@ -10,124 +11,174 @@ window.onload = function(){
   const EDGE_COLOR = '#2244cc';
   const NODE_SIZE = 4;
 
+  // point be moving
+  let movPoint = null;
+  // last mousedown - move point
+  let lastMouseX = 0;
+  let lastMouseY = 0;
+  // last mousedown center - rotate
+  let lastCmbX = null;
+  let lastCmbY = null;
+  // context
+  let ctx = null;
+
   let canvas = null;
-  let model = {};
 
-  model.ctx = null;
+// ctx.fillStyle = NODE_COLOR;
+// ctx.strokeStyle = EDGE_COLOR;
 
-  model.nodes = [];
+  let sheer = {
+    curve: new Bezier(200,100,0, 400,300,0, 900,100,0),
+    // call when point is changed
+    update(){
+      this.curve.update();
+    },
+    draw(){
+      drawSkeleton(sheer.curve);
+      drawCurve(sheer.curve);
+    }
+  };
 
-  model.edges = [];
-
-  model.draw = function(){
-    let ctx = this.ctx;
-    ctx.clearRect(-200, -200, 400, 400);
+  function drawPoint(p, offset) {
+    offset = offset || { x:0, y:0 };
+    var ox = offset.x;
+    var oy = offset.y;
     ctx.beginPath();
-    ctx.strokeStyle = EDGE_COLOR;
-    for(let edge of this.edges){
-      ctx.moveTo(this.nodes[edge[0]].x, this.nodes[edge[0]].y);
-      ctx.lineTo(this.nodes[edge[1]].x, this.nodes[edge[1]].y);
+    ctx.arc(p.x + ox, p.y + oy, NODE_SIZE, rad(0), rad(360));
+    ctx.stroke();
+  }
+
+  function drawPoints(points, offset) {
+    offset = offset || { x:0, y:0 };
+    points.forEach(function(p) {
+      drawCircle(p, 5, offset);
+    });
+  }
+
+  function drawCircle(p, r, offset) {
+    offset = offset || { x:0, y:0 };
+    var ox = offset.x;
+    var oy = offset.y;
+    ctx.beginPath();
+    ctx.arc(p.x + ox, p.y + oy, r, 0, 2*Math.PI);
+    ctx.stroke();
+  }
+
+  function drawLine(p1, p2, offset) {
+    offset = offset || { x:0, y:0 };
+    var ox = offset.x;
+    var oy = offset.y;
+    ctx.beginPath();
+    ctx.moveTo(p1.x + ox,p1.y + oy);
+    ctx.lineTo(p2.x + ox,p2.y + oy);
+    ctx.stroke();
+  }
+
+  function drawSkeleton(curve, offset, nocoords){
+    offset = offset || { x:0, y:0 };
+    var pts = curve.points;
+    ctx.strokeStyle = NODE_COLOR;
+    drawLine(pts[0], pts[1], offset);
+    if(pts.length === 3) { drawLine(pts[1], pts[2], offset); }
+    else {drawLine(pts[2], pts[3], offset); }
+    ctx.strokeStyle = "black";
+    if(!nocoords) drawPoints(pts, offset);
+  }
+
+  function drawCurve(curve, offset) {
+    offset = offset || { x:0, y:0 };
+    var ox = offset.x;
+    var oy = offset.y;
+    ctx.beginPath();
+    var p = curve.points, i;
+    ctx.moveTo(p[0].x + ox, p[0].y + oy);
+    if(p.length === 3) {
+      ctx.quadraticCurveTo(
+        p[1].x + ox, p[1].y + oy,
+        p[2].x + ox, p[2].y + oy
+      );
+    }
+    if(p.length === 4) {
+      ctx.bezierCurveTo(
+        p[1].x + ox, p[1].y + oy,
+        p[2].x + ox, p[2].y + oy,
+        p[3].x + ox, p[3].y + oy
+      );
     }
     ctx.stroke();
-
-    ctx.beginPath();
-    ctx.fillStyle = NODE_COLOR;
-    for(let node of this.nodes){
-      ctx.moveTo(node.x, node.y);
-      ctx.arc(node.x, node.y, NODE_SIZE, rad(0), rad(360));
-    }
-    ctx.fill();
-  };
-
-  model.rotateX = function(degree){
-    for(let node of this.nodes){
-      rotate.x(node, degree);
-    }
-    this.draw();
-  };
-  model.rotateY = function(degree){
-    for(let node of this.nodes){
-      rotate.y(node, degree);
-    }
-    this.draw();
-  };
-  model.rotateZ = function(degree){
-    for(let node of this.nodes){
-      rotate.z(node, degree);
-    }
-    this.draw();
-  };
-  // to rotate model by mouse
-  model.mouseClientX = 0;
-  model.mouseClientY = 0;
-  // nodes
-  model.nodes.push({x: -100, y: -100, z: -100});
-  model.nodes.push({x: -100, y: -100, z:  100});
-  model.nodes.push({x: -100, y:  100, z: -100});
-  model.nodes.push({x: -100, y:  100, z:  100});
-  model.nodes.push({x:  100, y: -100, z: -100});
-  model.nodes.push({x:  100, y: -100, z:  100});
-  model.nodes.push({x:  100, y:  100, z: -100});
-  model.nodes.push({x:  100, y:  100, z:  100});
-  // edges
-  model.edges.push([0, 1]);
-  model.edges.push([1, 3]);
-  model.edges.push([3, 2]);
-  model.edges.push([2, 0]);
-  model.edges.push([4, 5]);
-  model.edges.push([5, 7]);
-  model.edges.push([7, 6]);
-  model.edges.push([6, 4]);
-  model.edges.push([0, 4]);
-  model.edges.push([1, 5]);
-  model.edges.push([2, 6]);
-  model.edges.push([3, 7]);
-
-
+    ctx.closePath();
+  }
 
   /* **********************
     init
   *************************/
   canvas  = document.getElementById("mycanvas");
   if (canvas.getContext){
-    model.ctx = canvas.getContext('2d');
-    model.ctx.translate(200, 200);
-    // draw model
-    model.draw();
+    ctx = canvas.getContext('2d');
+    // ctx.translate(200, 200);
+
+    draw();
+    // drawSkeleton(sheer.curve);
+    // drawCurve(sheer.curve);
+
   } else {
     alert('no canvas');
      // canvas-unsupported code here
   }
 
+  function draw(){
+    ctx.clearRect(0, 0, 1000, 400);
+    sheer.draw();
+  }
 
   /* **********************
     util
   *************************/
-  let rotate = {};
-  rotate.z = function(node, degree) {
+  function rotateCurveZ(curve, degree){
+    curve.points.forEach(p=>{
+      rotateZ(p, degree);
+    });
+  }
+
+  function rotateCurveY(curve, degree){
+    curve.points.forEach(p=>{
+      rotateY(p, degree);
+    });
+  }
+
+  function rotateCurveX(curve, degree){
+    curve.points.forEach(p=>{
+      rotateX(p, degree);
+    });
+  }
+
+  function rotateZ(point, degree) {
     let cos_tetha = Math.cos(rad(degree));
     let sin_tetha = Math.sin(rad(degree));
-    let x = node.x;
-    let y = node.y;
-    node.x = x * cos_tetha - y * sin_tetha;
-    node.y = y * cos_tetha + x * sin_tetha;
-  };
-  rotate.y = function(node, degree) {
+    let x = point.x;
+    let y = point.y;
+    point.x = x * cos_tetha - y * sin_tetha;
+    point.y = y * cos_tetha + x * sin_tetha;
+  }
+
+  function rotateY(point, degree) {
     let cos_tetha = Math.cos(rad(degree));
     let sin_tetha = Math.sin(rad(degree));
-    let x = node.x;
-    let z = node.z;
-    node.x = x * cos_tetha - z * sin_tetha;
-    node.z = z * cos_tetha + x * sin_tetha;
-  };
-  rotate.x = function(node, degree) {
+    let x = point.x;
+    let z = point.z;
+    point.x = x * cos_tetha - z * sin_tetha;
+    point.z = z * cos_tetha + x * sin_tetha;
+  }
+
+  function rotateX(point, degree) {
     let cos_tetha = Math.cos(rad(degree));
     let sin_tetha = Math.sin(rad(degree));
-    let z = node.z;
-    let y = node.y;
-    node.z = z * cos_tetha - y * sin_tetha;
-    node.y = y * cos_tetha + z * sin_tetha;
-  };
+    let z = point.z;
+    let y = point.y;
+    point.z = z * cos_tetha - y * sin_tetha;
+    point.y = y * cos_tetha + z * sin_tetha;
+  }
+
   // convert degree to radians
   function rad(degree){
     return (Math.PI/180)*degree;
@@ -146,48 +197,92 @@ window.onload = function(){
   });
   // mousedown
   canvas.addEventListener('mousedown', (event)=>{
-    // console.log(event);
+    // rotation - mid button mouse
     if (event.target.id === 'mycanvas' && event.buttons === 4) {
-      model.mouseClientX = event.clientX;
-      model.mouseClientY = event.clientY;
+      lastCmbX = event.clientX;
+      lastCmbY = event.clientY;
+    }
+    // selection - left button mouse
+    else if (event.target.id === 'mycanvas' && event.buttons === 1) {
+      sheer.curve.points.forEach(p=>{
+        if (Math.abs(event.offsetX - p.x) < 5 && Math.abs(event.offsetY - p.y) < 5) {
+          movPoint = p;
+          lastMouseX = event.offsetX;
+          lastMouseY = event.offsetY;
+        }
+      });
     }
   });
   // mouseup
   canvas.addEventListener('mouseup', (event)=>{
-    // console.log(event);
-    model.mouseClientX = 0;
-    model.mouseClientY = 0;
+    lastCmbX = lastCmbY = null;
+    movPoint = null;
   });
   // mousemove
   canvas.addEventListener('mousemove', (event)=>{
+    let mx = event.offsetX;
+    let my = event.offsetY;
+
     // rotate model
-    if (model.mouseClientX != 0) {
-      let deltaX = model.mouseClientX - event.clientX;
-      // console.log(`deltaX: ${deltaX}`);
-      model.mouseClientX = event.clientX;
+    if (lastCmbX !== null) {
+      let deltaX = lastCmbX - mx;
+      lastCmbX = mx;
 
-      let deltaY = model.mouseClientY - event.clientY;
-      // console.log(`deltaY: ${deltaY}`);
-      model.mouseClientY = event.clientY;
+      let deltaY = lastCmbY - my;
+      lastCmbY = my;
 
-      model.rotateY(deltaX/4);
-      model.rotateX(-deltaY/4);
+      rotateCurveY(sheer.curve, deltaX/4);
+      rotateCurveX(sheer.curve, -deltaY/4);
+      sheer.update();
+      draw();
+    }
+
+    // change cursor
+    if (movPoint === null) {
+      let found = false;
+      // find selected point
+      sheer.curve.points.forEach(p=>{
+        if (Math.abs(mx - p.x) < 5 && Math.abs(my - p.y) < 5) {
+          found = true;
+        }
+      });
+      canvas.style.cursor = found ? 'pointer' : 'default';
+    }
+    // move point
+    else {
+      movPoint.x = movPoint.x + mx - lastMouseX;
+      movPoint.y = movPoint.y + my - lastMouseY;
+
+      lastMouseX = mx;
+      lastMouseY = my;
+
+      sheer.update();
+      draw();
     }
   });
+
   // keydown
   document.addEventListener('keydown', (event)=> {
     // console.log(event);
     if (event.key == 'ArrowUp') {
-      model.rotateX(-.1);
+      rotateCurveX(sheer.curve, -1);
+      sheer.update();
+      draw();
     }
     else if (event.key == 'ArrowDown') {
-      model.rotateX(.1);
+      rotateCurveX(sheer.curve, 1);
+      sheer.update();
+      draw();
     }
     else if (event.key == 'ArrowRight') {
-      model.rotateY(-.1);
+      rotateCurveY(sheer.curve, -1);
+      sheer.update();
+      draw();
     }
     else if (event.key == 'ArrowLeft') {
-      model.rotateY(.1);
+      rotateCurveY(sheer.curve, 1);
+      sheer.update();
+      draw();
     }
   });
 
