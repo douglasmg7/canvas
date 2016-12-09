@@ -3,7 +3,7 @@
 'use strict';
 
 const NODE_COLOR = '#28a86b';
-// const EDGE_COLOR = '#2244cc';
+const EDGE_COLOR = '#2244cc';
 const NODE_SIZE = 4;
 
 window.onload = function(){
@@ -23,6 +23,14 @@ window.onload = function(){
   // ctx.strokeStyle = EDGE_COLOR;
 
   /************************
+    data
+  *************************/
+  let data = {
+  };
+
+
+
+  /************************
     model
   *************************/
   let sheer = {
@@ -39,6 +47,10 @@ window.onload = function(){
 
   function draw(){
     ctx.clearRect(0, 0, 1100, 500);
+    // ctx.drawImage(imageObj, 0, 0);
+    // ctx.drawImage(imageObj, 0, 0, 780, 651);
+    // ctx.drawImage(imageObj, -50, 0, 1170, 976.5); // Rattylines
+    ctx.drawImage(imageObj, 0, -1100);
     sheer.draw();
   }
 
@@ -49,6 +61,10 @@ window.onload = function(){
   canvas  = document.getElementById("mycanvas");
   if (canvas.getContext){
     ctx = canvas.getContext('2d');
+    var imageObj = new Image();
+    // imageObj.src = 'img/Rattylines.jpg';
+    imageObj.src = 'img/flicka20-sailplan.gif';
+
     // ctx.translate(200, 200);
     draw();
   } else {
@@ -209,6 +225,7 @@ window.onload = function(){
   }
 
   function drawCurve(curve, offset) {
+    ctx.strokeStyle = EDGE_COLOR;
     offset = offset || { x:0, y:0 };
     var ox = offset.x;
     var oy = offset.y;
@@ -280,7 +297,7 @@ window.onload = function(){
       drawLine(pts[0], pts[1], offset);
       if(pts.length === 3) { drawLine(pts[1], pts[2], offset); }
       else {drawLine(pts[2], pts[3], offset); }
-      ctx.strokeStyle = "black";
+      ctx.strokeStyle = "yellow";
       if(!nocoords) drawPoints(pts, offset);
     },
 
