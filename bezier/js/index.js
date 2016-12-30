@@ -29,7 +29,6 @@ window.onload = function(){
   };
 
 
-
   /************************
     model
   *************************/
@@ -46,11 +45,14 @@ window.onload = function(){
   };
 
   function draw(){
-    ctx.clearRect(0, 0, 1100, 500);
+    // ctx.clearRect(0, 0, 1100, 500);
+    ctx.clearRect(0, 0, 1600, 800);
     // ctx.drawImage(imageObj, 0, 0);
     // ctx.drawImage(imageObj, 0, 0, 780, 651);
     // ctx.drawImage(imageObj, -50, 0, 1170, 976.5); // Rattylines
-    ctx.drawImage(imageObj, 0, -1100);
+    // ctx.drawImage(imageObj, 0, -1100); // flicka20
+    // ctx.drawImage(imageObj, 0, 0, 1440, 2560); // 14-foot-sharpie (720x1280)
+    ctx.drawImage(imageObj, 0, 0, 1280, 720); // 14-foot-sharpie (1280x720x)
     sheer.draw();
   }
 
@@ -63,7 +65,8 @@ window.onload = function(){
     ctx = canvas.getContext('2d');
     var imageObj = new Image();
     // imageObj.src = 'img/Rattylines.jpg';
-    imageObj.src = 'img/flicka20-sailplan.gif';
+    // imageObj.src = 'img/flicka20-sailplan.gif';
+    imageObj.src = 'img/18-foot-sharpie.jpg';
 
     // ctx.translate(200, 200);
     draw();
