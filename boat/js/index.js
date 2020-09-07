@@ -5,25 +5,29 @@
 const NODE_COLOR = '#28a86b';
 const EDGE_COLOR = '#2244cc';
 const NODE_SIZE = 4;
-const CANVAS_WIDTH = 700;
-const CANVAS_HEIGHT = 500;
 const CANVAS_OFFSET_WIDTH = 50;
 const CANVAS_OFFSET_HEIGHT = 200;
 
 const canvas  = document.getElementById("canvas");
 const ctx = canvas.getContext('2d');
 
+// Line test.
+let line_test = {
+    draw(){
+        ctx.beginPath();
+        ctx.moveTo(0 ,0);
+        ctx.lineTo(400, 300);
+        ctx.stroke();
+    }
+};
+
 // DWL
 let dwl = {
-  // // ctx.fillStyle = NODE_COLOR;
-  // // ctx.strokeStyle = EDGE_COLOR;
     draw(){
         ctx.strokeStyle = '#2244cc';
         ctx.beginPath();
-        ctx.moveTo(CANVAS_OFFSET_WIDTH, 0);
-        ctx.lineTo(-canvas.width + CANVAS_OFFSET_WIDTH, 0);
-        console.log(`canvas.width: ${canvas.width}`);
-        // ctx.lineTo(-CANVAS_WIDTH, 0);
+        ctx.moveTo(-CANVAS_OFFSET_WIDTH, 0);
+        ctx.lineTo(canvas.width - CANVAS_OFFSET_WIDTH, 0);
         ctx.stroke();
     }
 };
@@ -46,9 +50,9 @@ if (canvas.getContext){
 }
 
 function draw(){
-    ctx.clearRect(0, 0, 400, 400);
     dwl.draw();
-    bottom.draw();
+    line_test.draw();
+    // bottom.draw();
 }
 
 function initialize() {
@@ -65,41 +69,11 @@ function initialize() {
 function resizeCanvas() {
     canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
-
     ctx.strokeStyle = '#2244cc';
+    // Set coordinates.
     ctx.rotate(180 * Math.PI / 180);
-    ctx.translate(-800, -600);
-    // ctx.translate(ctx.canvas.width - CANVAS_OFFSET_WIDTH, ctx.canvas.height - CANVAS_OFFSET_HEIGHT);
-    ctx.beginPath();
-    ctx.moveTo(0 ,0);
-    ctx.lineTo(300, 300);
-    ctx.stroke();
-    // draw();
+    console.log(`canvas heigh: ${canvas.height}`);
+    ctx.translate(CANVAS_OFFSET_WIDTH - canvas.width, CANVAS_OFFSET_HEIGHT - canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    draw();
 }
-
-window.onload = function(){
-    // const canvas  = document.getElementById("mycanvas");
-    // if (canvas.getContext){
-        // const ctx = canvas.getContext('2d');
-        // // ctx.translate(200, 200);
-        // draw();
-    // } else {
-        // alert('no canvas');
-    // }
-
-  // [>***********************
-    // model
-  // *************************/
-  // let sheer = {
-    // curve: new Bezier(100,50,0, 400,200,0, 800,50,0),
-    // // call when point is changed
-    // update(){
-      // this.curve.update();
-    // },
-    // draw(){
-      // drawSkeleton(sheer.curve);
-      // drawCurve(sheer.curve);
-    // }
-  // };
-
-};
