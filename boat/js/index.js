@@ -5,11 +5,89 @@
 const NODE_COLOR = '#28a86b';
 const EDGE_COLOR = '#2244cc';
 const NODE_SIZE = 4;
-const CANVAS_OFFSET_WIDTH = 50;
-const CANVAS_OFFSET_HEIGHT = 200;
 
 const canvas  = document.getElementById("canvas");
 const ctx = canvas.getContext('2d');
+
+// Bow.
+let bow = {
+    top: {
+        x: 0,
+        y: 700,
+    },
+    bottom: {
+        x: 50,
+        y: -50,
+    },
+    draw() {
+        ctx.beginPath();
+        ctx.moveTo(this.top.x ,this.top.y);
+        ctx.lineTo(this.bottom.x, this.bottom.y);
+        ctx.stroke();
+    }
+}
+
+// Stern.
+let stern = {
+    top: {
+        x: 6000,
+        y: 600,
+    },
+    bottom: {
+        x: 5800,
+        y: 50,
+    },
+    draw() {
+        ctx.beginPath();
+        ctx.moveTo(this.top.x ,this.top.y);
+        ctx.lineTo(this.bottom.x, this.bottom.y);
+        ctx.stroke();
+    }
+}
+
+// Bottom.
+let bottom = {
+    bow: {
+        x: bow.bottom.x,
+        y: bow.bottom.y,
+    },
+    stern: {
+        x: stern.bottom.x,
+        y: stern.bottom.y,
+    },
+    draw() {
+        ctx.beginPath();
+        ctx.moveTo(this.bow.x ,this.bow.y);
+
+        ctx.quadraticCurveTo(
+            stern.bottom.x/2, -stern.top.y/2,
+            this.stern.x, this.stern.y
+        );
+        ctx.stroke();
+    }
+}
+
+// Sheer.
+let sheer = {
+    bow: {
+        x: bow.top.x,
+        y: bow.top.y,
+    },
+    stern: {
+        x: stern.top.x,
+        y: stern.top.y,
+    },
+    draw() {
+        ctx.beginPath();
+        ctx.moveTo(this.bow.x ,this.bow.y);
+
+        ctx.quadraticCurveTo(
+            stern.top.x/1.7, -stern.top.y/16,
+            this.stern.x, this.stern.y
+        );
+        ctx.stroke();
+    }
+}
 
 // Line test.
 let line_test = {
@@ -26,18 +104,8 @@ let dwl = {
     draw(){
         ctx.strokeStyle = '#2244cc';
         ctx.beginPath();
-        ctx.moveTo(-CANVAS_OFFSET_WIDTH, 0);
-        ctx.lineTo(canvas.width - CANVAS_OFFSET_WIDTH, 0);
-        ctx.stroke();
-    }
-};
-
-let bottom = {
-    draw(){
-        ctx.strokeStyle = '#2244cc';
-        ctx.beginPath();
-        ctx.moveTo(0 ,0);
-        ctx.lineTo(-300, -300);
+        ctx.moveTo(-stern.top.x, 0);
+        ctx.lineTo(stern.top.x * 2, 0);
         ctx.stroke();
     }
 };
@@ -50,9 +118,12 @@ if (canvas.getContext){
 }
 
 function draw(){
+    // line_test.draw();
     dwl.draw();
-    line_test.draw();
-    // bottom.draw();
+    bow.draw();
+    stern.draw();
+    sheer.draw();
+    bottom.draw();
 }
 
 function initialize() {
@@ -69,11 +140,15 @@ function initialize() {
 function resizeCanvas() {
     canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
-    ctx.strokeStyle = '#2244cc';
     // Set coordinates.
     ctx.rotate(180 * Math.PI / 180);
-    console.log(`canvas heigh: ${canvas.height}`);
-    ctx.translate(CANVAS_OFFSET_WIDTH - canvas.width, CANVAS_OFFSET_HEIGHT - canvas.height);
+    ctx.translate(-canvas.width * .95, -canvas.height * .8);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    let scale_factor = canvas.width / (stern.top.x * 1.12);
+    ctx.scale(scale_factor, scale_factor);
+
+    ctx.lineWidth = 2 / scale_factor;
+    ctx.strokeStyle = '#2244cc';
     draw();
 }
