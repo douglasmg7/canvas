@@ -2,6 +2,9 @@
 /* eslint no-unused-vars: 0, no-console: 0 */
 'use strict';
 
+// const math = require('mathjs');
+// const math = require('../node_modules/mathjs/dist/math.js');
+
 const NODE_COLOR = '#28a86b';
 const EDGE_COLOR = '#2244cc';
 const NODE_SIZE = 4;
@@ -9,106 +12,106 @@ const NODE_SIZE = 4;
 const canvas  = document.getElementById("canvas");
 const ctx = canvas.getContext('2d');
 
-// Bow.
-let bow = {
-    top: {
-        x: 0,
-        y: 700,
-    },
-    bottom: {
-        x: 50,
-        y: -50,
-    },
-    draw() {
+// Convert degree to radians.
+function rad(degree){
+    return (Math.PI/180)*degree;
+}
+
+class Point {
+    constructor(p=[0, 0, 0]) {
+        this.x = p[0];
+        this.y = p[1];
+        this.z = p[2];
+    }
+    drawXY() {
         ctx.beginPath();
-        ctx.moveTo(this.top.x ,this.top.y);
-        ctx.lineTo(this.bottom.x, this.bottom.y);
-        ctx.stroke();
+        ctx.moveTo(this.x, this.y);
+        ctx.arc(this.x, this.y, 20, rad(0), rad(360));
+        ctx.fill();
+    }
+    log() {
+        console.log(`[${this.x}, ${this.y}, ${this.z}]`);
     }
 }
 
-// Stern.
-let stern = {
-    top: {
-        x: 6000,
-        y: 600,
-    },
-    bottom: {
-        x: 5800,
-        y: 50,
-    },
-    draw() {
+class Line {
+    constructor(sp=[0, 0, 0], ep=[0, 0, 0]) {
+        this.startPoint = new Point(sp);
+        this.endPoint = new Point(ep);
+    }
+    drawXY() {
         ctx.beginPath();
-        ctx.moveTo(this.top.x ,this.top.y);
-        ctx.lineTo(this.bottom.x, this.bottom.y);
+        ctx.moveTo(this.startPoint.x ,this.startPoint.y);
+        ctx.lineTo(this.endPoint.x, this.endPoint.y);
         ctx.stroke();
+    }
+    drawStartPointXY() {
+        this.startPoint.drawXY();
+    }
+    drawEndPointXY() {
+        this.endPoint.drawXY();
+    }
+    drawPointsXY() {
+        this.drawStartPointXY();
+        this.drawEndPointXY();
+    }
+    log() {
+        console.log(`[${JSON.stringify(this.startPoint, null, 2)}, ${JSON.stringify(this.endPoint, null, 2)}]`);
     }
 }
 
-// Bottom.
-let bottom = {
-    bow: {
-        x: bow.bottom.x,
-        y: bow.bottom.y,
-    },
-    stern: {
-        x: stern.bottom.x,
-        y: stern.bottom.y,
-    },
-    draw() {
+class Curve extends Line {
+    constructor(sp=[0, 0, 0], cp=[0, 0, 0], ep=[0, 0, 0]) {
+        super(sp, ep);
+        this.controlPoint = new Point(cp);
+    }
+    drawXY() {
         ctx.beginPath();
-        ctx.moveTo(this.bow.x ,this.bow.y);
-
+        ctx.moveTo(this.startPoint.x ,this.startPoint.y);
         ctx.quadraticCurveTo(
-            stern.bottom.x/2, -stern.top.y/2,
-            this.stern.x, this.stern.y
+            this.controlPoint.x, this.controlPoint.y,
+            this.endPoint.x, this.endPoint.y
         );
         ctx.stroke();
     }
+    drawControlPointXY() {
+        this.controlPoint.drawXY();
+    }
+    drawPointsXY() {
+        super.drawPointsXY();
+        this.drawControlPointXY();
+    }
+    log() {
+        console.log(`[${JSON.stringify(this.startPoint, null, 2)}, ${JSON.stringify(this.controlPoint, null, 2)}, ${JSON.stringify(this.endPoint, null, 2)}]`);
+    }
+}
+
+function getIntersection() {
+    // return math.sqrt(16).toString()
+    return math.intersect(
+        [dwl.startPoint.x, dwl.startPoint.y],
+        [dwl.endPoint.x, dwl.endPoint.y],
+        [bow.startPoint.x, bow.startPoint.y],
+        [bow.endPoint.x, bow.endPoint.y]
+    );
+    // return math.intersect( [-6000, 0, 0], [12000, 0, 0], [50, -50, 0], [0, 700, 0]);
+    // return math.intersect( [-6000, 0], [12000, 0], [50, -50], [0, 700]);
 }
 
 // Sheer.
-let sheer = {
-    bow: {
-        x: bow.top.x,
-        y: bow.top.y,
-    },
-    stern: {
-        x: stern.top.x,
-        y: stern.top.y,
-    },
-    draw() {
-        ctx.beginPath();
-        ctx.moveTo(this.bow.x ,this.bow.y);
-
-        ctx.quadraticCurveTo(
-            stern.top.x/1.7, -stern.top.y/16,
-            this.stern.x, this.stern.y
-        );
-        ctx.stroke();
-    }
-}
-
-// Line test.
-let line_test = {
-    draw(){
-        ctx.beginPath();
-        ctx.moveTo(0 ,0);
-        ctx.lineTo(400, 300);
-        ctx.stroke();
-    }
-};
-
-// DWL
-let dwl = {
-    draw(){
-        ctx.strokeStyle = '#2244cc';
-        ctx.beginPath();
-        ctx.moveTo(-stern.top.x, 0);
-        ctx.lineTo(stern.top.x * 2, 0);
-        ctx.stroke();
-    }
-};
+let sheer = new Curve([0, 700, 0], [3100, 300, 0], [6000, 600, 0]);
+// Bottom.
+let bottom = new Curve([50, -50, 0], [3000, -200, 0], [5800, 50, 0]);
+// Bow.
+let bow = new Line();
+bow.startPoint = bottom.startPoint;
+bow.endPoint = sheer.startPoint;
+// Stern.
+let stern = new Line();
+stern.startPoint = bottom.endPoint;
+stern.endPoint = sheer.endPoint;
+// DWL.
+let dwl = new Line([.2*-sheer.endPoint.x, 0, 0], [1.1*sheer.endPoint.x, 0, 0]);
 
 if (canvas.getContext){
     // Set 0 position.
@@ -117,13 +120,20 @@ if (canvas.getContext){
     alert('no canvas');
 }
 
-function draw(){
-    // line_test.draw();
-    dwl.draw();
-    bow.draw();
-    stern.draw();
-    sheer.draw();
-    bottom.draw();
+function drawXY(){
+    dwl.drawXY();
+    bow.drawXY();
+    stern.drawXY();
+    sheer.drawXY();
+    bottom.drawXY();
+
+    console.log(`intersetcion: ${getIntersection()}`);
+
+    let point = getIntersection();
+    ctx.beginPath();
+    ctx.moveTo(point[0], point[1]);
+    ctx.arc(point[0], point[1], 20, rad(0), rad(360));
+    ctx.fill();
 }
 
 function initialize() {
@@ -145,10 +155,10 @@ function resizeCanvas() {
     ctx.translate(-canvas.width * .95, -canvas.height * .8);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    let scale_factor = canvas.width / (stern.top.x * 1.12);
+    let scale_factor = canvas.width / (stern.endPoint.x * 1.12);
     ctx.scale(scale_factor, scale_factor);
 
     ctx.lineWidth = 2 / scale_factor;
     ctx.strokeStyle = '#2244cc';
-    draw();
+    drawXY();
 }
